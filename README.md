@@ -6,10 +6,10 @@ A simple Retrieval-Augmented Generation (RAG) app that answers questions strictl
 - Streamlit UI: `app.py` (with a History page under `pages/History.py`)
 
 ## Tech stack
-- Embeddings: `nomic-embed-text` via Ollama (local)
+- Embeddings: `all-MiniLM-L6-v2` via HuggingFace (free, local)
 - Vector store: FAISS (in-memory)
 - LLM: Qwen (`qwen/qwen3-32b`) via Groq
-- Framework: LangChain + `langchain-ollama` + `langchain-groq`
+- Framework: LangChain + `langchain-huggingface` + `langchain-groq`
 
 ---
 
@@ -29,7 +29,6 @@ personal_wikipedia/
 
 ## Prerequisites
 - Python 3.10+
-- Ollama installed and running: https://ollama.ai
 - Groq API key: https://console.groq.com/keys
 
 Place your Groq key in a `.env` file at the project root:
@@ -38,6 +37,8 @@ GROQ_API_KEY="YOUR_API_KEY_HERE"
 ```
 
 Alternatively, export it in your shell session (see below).
+
+**Note:** The first run will download the HuggingFace embedding model (~80MB). No additional setup required!
 
 ---
 
@@ -51,9 +52,6 @@ py -3 -m venv .venv
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 
-# Prepare the embedding model (first time only)
-ollama pull nomic-embed-text
-
 # Optional: set the key for this session if not using .env
 $env:GROQ_API_KEY = "YOUR_REAL_GROQ_API_KEY"
 ```
@@ -65,9 +63,6 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 pip install -r requirements.txt
-
-# Prepare the embedding model (first time only)
-ollama pull nomic-embed-text
 
 # Optional: set the key for this session if not using .env
 export GROQ_API_KEY="YOUR_REAL_GROQ_API_KEY"
@@ -95,21 +90,21 @@ Type your question; type `exit` to quit.
 
 ## How it works
 1. Load your file (or upload via UI) and split into chunks (size 1000, overlap 200).
-2. Create embeddings for chunks using `nomic-embed-text` via Ollama (runs locally).
+2. Create embeddings for chunks using `all-MiniLM-L6-v2` via HuggingFace (runs locally, first run downloads model).
 3. Build an in-memory FAISS index and use it to retrieve relevant chunks for a question.
-4. Feed retrieved context + question to Groq’s Qwen model (`qwen/qwen3-32b`) with a strict prompt that refuses to invent facts.
+4. Feed retrieved context + question to Groq's Qwen model (`qwen/qwen3-32b`) with a strict prompt that refuses to invent facts.
 5. Display only the final answer. The UI hides any hidden reasoning (`<think>`/similar tags) and shows code blocks with copy buttons, while plain text renders normally.
 
 Notes:
-- Ollama provides embeddings only; Groq generates the final text answer.
+- HuggingFace provides embeddings locally (free, private, no external service during retrieval).
+- Groq generates the final text answer (cloud LLM).
 - All indexing is in-memory. Re-upload/re-run to refresh.
-- PDF support relies on text-based PDFs (for scanned PDFs, consider OCR).
+- PDF/DOCX support relies on text-based files (for scanned documents, consider OCR).
 
 ---
 
 ## Troubleshooting
-- “ollama not found”: Ensure Ollama is installed and on PATH (or run with an absolute path). Make sure the service is running. You can also set `OLLAMA_HOST=http://127.0.0.1:11434`.
-- Embedding errors: Ensure `ollama pull nomic-embed-text` succeeded and Ollama is running.
+- Embedding errors on first run: The app downloads `all-MiniLM-L6-v2` (~80MB) from HuggingFace. Ensure you have internet and disk space.
 - Import errors: Install requirements inside the same virtual environment you use to run the app.
 - Groq auth errors: Confirm `GROQ_API_KEY` is set (via `.env` or shell env var).
 - Streamlit not seeing new packages: Restart Streamlit after installing requirements.
@@ -124,7 +119,7 @@ Notes:
 ---
 
 ## Security & privacy
-- Embeddings are computed locally by Ollama; your documents aren’t sent to a third-party for retrieval.
+- Embeddings are computed locally by HuggingFace's sentence-transformers; your documents aren't sent to a third-party for retrieval.
 - The final answer is generated in the cloud by Groq; only the prompt (question + retrieved snippets) is sent.
 
 ---

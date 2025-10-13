@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 # LangChain core & community
 from langchain_community.document_loaders import TextLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_ollama import OllamaEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
@@ -56,16 +56,14 @@ def main() -> None:
     splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     split_docs = splitter.split_documents(docs)
 
-    # Step 6: Create Embeddings and the Vector Store. .\.venv\Scripts\Activate.ps1
-    # IMPORTANT: Ensure Ollama is installed and the embedding model is available locally:
-    #   1) Install Ollama: https://ollama.ai
-    #   2) Pull embeddings model: `ollama pull nomic-embed-text`
-    # Then we can initialize OllamaEmbeddings with that model name.
+    # Step 6: Create Embeddings and the Vector Store
+    # Uses HuggingFace embeddings (free, no external service needed)
+    # First run will download the model (~80MB) from HuggingFace
     try:
-        embeddings = OllamaEmbeddings(model="nomic-embed-text")
+        embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
     except Exception as e:
         raise RuntimeError(
-            "Failed to initialize OllamaEmbeddings (langchain-ollama). Ensure Ollama is running and the model is pulled: ollama pull nomic-embed-text"
+            "Failed to initialize HuggingFaceEmbeddings. Ensure sentence-transformers is installed: pip install sentence-transformers"
         ) from e
 
     # Build an in-memory FAISS vector store from the chunks using the embeddings

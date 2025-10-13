@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 
 from langchain_community.document_loaders import TextLoader, PyPDFLoader, Docx2txtLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_ollama import OllamaEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
@@ -31,7 +31,7 @@ from operator import itemgetter
 load_dotenv()
 
 APP_TITLE = "Personal Wikipedia (Streamlit)"
-EMBED_MODEL = "nomic-embed-text"
+EMBED_MODEL = "all-MiniLM-L6-v2"
 LLM_MODEL = "qwen/qwen3-32b"
 
 
@@ -69,8 +69,8 @@ def _split_docs(docs):
 
 
 def _build_retriever(docs):
-    # Ensure Ollama is running and model pulled: `ollama pull nomic-embed-text`
-    embeddings = OllamaEmbeddings(model=EMBED_MODEL)
+    # Uses HuggingFace embeddings (free, runs locally via sentence-transformers)
+    embeddings = HuggingFaceEmbeddings(model_name=EMBED_MODEL)
     vs = FAISS.from_documents(docs, embeddings)
     return vs.as_retriever()
 
@@ -195,10 +195,9 @@ def main():
 
     with st.sidebar:
         st.header("Settings")
-        st.write("Embeddings: nomic-embed-text (via Ollama, local)")
+        st.write("Embeddings: all-MiniLM-L6-v2 (via HuggingFace, free)")
         st.write("LLM: Qwen (qwen/qwen3-32b via Groq)")
-        st.markdown("<div class='small-note'>Ensure Ollama is running and the embedding model is pulled.</div>", unsafe_allow_html=True)
-        st.code("ollama pull nomic-embed-text")
+        st.markdown("<div class='small-note'>First run downloads the embedding model (~80MB).</div>", unsafe_allow_html=True)
 
     uploaded = st.file_uploader("Upload knowledge base (.txt, .pdf, .docx)", type=["txt", "pdf", "docx"], accept_multiple_files=False)
 
