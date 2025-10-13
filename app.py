@@ -36,10 +36,19 @@ LLM_MODEL = "qwen/qwen3-32b"
 
 
 def require_env_var(name: str) -> str:
+    # Try environment variable first
     val = os.getenv(name)
+    
+    # If not found, try Streamlit secrets (for cloud deployment)
+    if not val or val == "YOUR_API_KEY_HERE":
+        try:
+            val = st.secrets.get(name)
+        except (AttributeError, FileNotFoundError, KeyError):
+            pass
+    
     if not val or val == "YOUR_API_KEY_HERE":
         raise RuntimeError(
-            f"Missing env var {name}. Put it in .env or set it in your environment."
+            f"Missing {name}. Add it to Streamlit Cloud Secrets (Settings → Secrets) or set it in your .env file."
         )
     return val
 
@@ -70,7 +79,12 @@ def _split_docs(docs):
 
 def _build_retriever(docs):
     # Uses HuggingFace embeddings (free, runs locally via sentence-transformers)
-    embeddings = HuggingFaceEmbeddings(model_name=EMBED_MODEL)
+    # Set model_kwargs to ensure proper device handling for deployment
+    embeddings = HuggingFaceEmbeddings(
+        model_name=EMBED_MODEL,
+        model_kwargs={'device': 'cpu'},
+        encode_kwargs={'normalize_embeddings': True}
+    )
     vs = FAISS.from_documents(docs, embeddings)
     return vs.as_retriever()
 

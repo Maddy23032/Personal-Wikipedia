@@ -60,7 +60,11 @@ def main() -> None:
     # Uses HuggingFace embeddings (free, no external service needed)
     # First run will download the model (~80MB) from HuggingFace
     try:
-        embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+        embeddings = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-MiniLM-L6-v2",
+            model_kwargs={'device': 'cpu'},
+            encode_kwargs={'normalize_embeddings': True}
+        )
     except Exception as e:
         raise RuntimeError(
             "Failed to initialize HuggingFaceEmbeddings. Ensure sentence-transformers is installed: pip install sentence-transformers"

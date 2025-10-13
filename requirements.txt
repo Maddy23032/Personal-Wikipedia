@@ -2,7 +2,8 @@ langchain
 langchain-groq
 langchain-community
 langchain-huggingface
-sentence-transformers
+sentence-transformers>=2.2.0
+torch>=2.0.0
 faiss-cpu
 python-dotenv
 streamlit
