@@ -1,5 +1,6 @@
 langchain
 langchain-groq
+langchain-text-splitters
 langchain-community
 langchain-huggingface
 sentence-transformers>=2.2.0
